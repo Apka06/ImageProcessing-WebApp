@@ -5,6 +5,7 @@ from scipy.ndimage import convolve
 from sklearn.neighbors import NearestNeighbors
 import cv2
 
+
 def read_image_gray(path):
     """
     Verilen dosya yolundan görüntüyü oku ve gri tonlamaya çevir.
@@ -113,7 +114,7 @@ def compute_descriptors(image, keypoints, window_size=8):
 
     return np.array(descriptors)
 
-def draw_keypoints(image, keypoints, window_name="Anahtar Noktalar"):
+def draw_keypoints(image, keypoints):
     """
     Anahtar noktaları hızlı bir şekilde görüntü üzerine çiz.
     """
@@ -128,9 +129,8 @@ def draw_keypoints(image, keypoints, window_name="Anahtar Noktalar"):
         cv2.circle(vis_image, (int(x), int(y)), 2, (0, 0, 255), -1)
 
     # OpenCV kullanarak hızlıca göster
-    cv2.imshow(window_name, vis_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    filtered_image = Image.fromarray(vis_image)
+    return filtered_image
 
 
 
@@ -186,39 +186,44 @@ def draw_matches(img1, kp1, img2, kp2, matches, window_name="Feature Matches"):
     cv2.destroyAllWindows()
 
 
-# Görüntüleri oku
-img1 = read_image_gray('foto1.jpg')
-img2 = read_image_gray('foto2.jpg')
+def main():
+    # Görüntüleri oku
+    img1 = read_image_gray('foto1.jpg')
+    img2 = read_image_gray('foto2.jpg')
 
-# Gradyan hesapla
-mag1, dir1 = compute_gradients(img1)
-mag2, dir2 = compute_gradients(img2)
+    # Gradyan hesapla
+    mag1, dir1 = compute_gradients(img1)
+    mag2, dir2 = compute_gradients(img2)
 
-# # Anahtar noktaları bul
-# kp1 = detect_keypoints_topk(mag1, top_k=50)
-# kp2 = detect_keypoints_topk(mag2, top_k=50)
+    # # Anahtar noktaları bul
+    # kp1 = detect_keypoints_topk(mag1, top_k=50)
+    # kp2 = detect_keypoints_topk(mag2, top_k=50)
 
-# Harris köşe tepkisini hesapla
-R1 = harris_response(img1)
-R2 = harris_response(img2)
+    # Harris köşe tepkisini hesapla
+    R1 = harris_response(img1)
+    R2 = harris_response(img2)
 
-# Anahtar noktaları bul
-kp1 = detect_harris_keypoints(R1, threshold=0.001)
-kp2 = detect_harris_keypoints(R2, threshold=0.001)
+    # Anahtar noktaları bul
+    kp1 = detect_harris_keypoints(R1, threshold=0.001)
+    kp2 = detect_harris_keypoints(R2, threshold=0.001)
 
 
-# Descriptor çıkar
-desc1 = compute_descriptors(img1, kp1)
-desc2 = compute_descriptors(img2, kp2)
+    # Descriptor çıkar
+    desc1 = compute_descriptors(img1, kp1)
+    desc2 = compute_descriptors(img2, kp2)
 
-# Anahtar noktaları çiz
-draw_keypoints(img1, kp1)
-draw_keypoints(img2, kp2)
+    # Anahtar noktaları çiz
+    draw_keypoints(img1, kp1)
+    draw_keypoints(img2, kp2)
 
-# Feature matching
-matches = match_features(desc1, desc2, threshold=5000)  # threshold'u duruma göre ayarlayabiliriz
+    # Feature matching
+    matches = match_features(desc1, desc2, threshold=5000)  # threshold'u duruma göre ayarlayabiliriz
 
-print(f"Eşleşen feature sayısı: {len(matches)}")
+    print(f"Eşleşen feature sayısı: {len(matches)}")
 
-# Eşleşmeleri görselleştir
-draw_matches(img1, kp1, img2, kp2, matches)
+    # Eşleşmeleri görselleştir
+    draw_matches(img1, kp1, img2, kp2, matches)
+
+
+if __name__ == "__main__":
+    main()
